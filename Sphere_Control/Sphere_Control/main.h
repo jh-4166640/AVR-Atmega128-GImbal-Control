@@ -1,0 +1,30 @@
+﻿/*
+ * main.h
+ *
+ * Created: 2025-11-11 10:03:57 AM 
+ *  Author: Jiheon 
+ */ 
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+
+#define F_CPU 14745600UL
+#include <avr/io.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
+#include <math.h>
+#include <stdlib.h>
+#include "lcd_gcc.h"
+#include "servo.h"
+
+ISR(TIMER1_COMPA_vect)
+{
+	asm("nop");
+}
+static inline void delay_ms(uint16_t ms);
+
+
+
+
+#endif /* MAIN_H_ */
