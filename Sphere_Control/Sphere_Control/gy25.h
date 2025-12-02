@@ -17,6 +17,7 @@
 #include "lcd.h"
 
 
+
 #define COMMAND_START				0xA5
 #define QUERY_MODE					0x51
 #define AUTO_DIRECT_MODE			0x52
@@ -31,7 +32,7 @@
 #define MSG_WAIT					"Wait...."
 #define MSG_CALIBRATING				"Calibrating 4sec"
 
-#define ERROR_VAL					801
+#define ERROR_VAL		801
 #define FRAME_START		0xAA
 #define FRAME_END		0x55
 
@@ -44,21 +45,22 @@
 #define ROLL_L			6
 #define FRAME_E			7
 
+
+
 uint8_t gy25_buffer[8];
 uint8_t gy25_idx;
-
 
 typedef struct
 {
 	int16_t roll;
 	int16_t pitch;
 	int16_t yaw;
-	
 }gy25_t;
 
 
 void GY25_Init(void);
+static inline void update_Angle_GY25(gy25_t* new_ang, gy25_t* cur_ang);
 gy25_t read_GY25(void);
-
+gy25_t Delta_angle_Calc_GY25(gy25_t* new_ang, gy25_t* cur_ang);
 
 #endif /* GY25_H_ */

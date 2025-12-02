@@ -23,6 +23,12 @@ ISR(TIMER1_COMPA_vect)
 {
 	asm("nop");
 }
+
+servo_t servo_status; //Current Servo motor angle status
+gy25_t raw_angle, new_angle, cur_angle;
+int16_t LPF_alpha = 80, LPF_scale = 100; // LPF의 alpha: LPF_alpha / LPF_scale = 0.8
+
+
 inline void delay_ms(uint16_t ms);
 
 

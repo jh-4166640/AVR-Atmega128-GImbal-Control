@@ -21,11 +21,27 @@
 #define	OCR_MAX			4608	// 180 deg 4608
 #define OCR_90			2765
 
+/* Servo motor and gy25 conversion ratio */
+/* Servo motor : GY25 = 2:3 */
+// 60 : 90
+#define SERVO2GY25_RATIO	(2.0/3.0)
+#define SERVO_MAX 150
+#define SERVO_MIN 30
+
+typedef struct
+{
+	uint16_t yaw_deg;
+	uint16_t pitch_deg;
+}servo_t;
+
 static inline void delay_ms(uint16_t ms);
 void Servo_Init(void);
 void Timer1_16bit_FastPWM_Init(void);
 static inline uint16_t DEG2OCR(uint16_t deg);
-void Servo_sample_code(void);
+static inline void set_YawServo(uint16_t ocr);
+static inline void set_PitchServo(uint16_t ocr);
+static inline void set_Servo(servo_t *cur, int16_t pitch, int16_t yaw);
+//void Servo_sample_code(void);
 
 // 0 deg  OCR1 = 922
 // 45 deg OCR1 = 1843
@@ -70,6 +86,33 @@ static inline uint16_t DEG2OCR(uint16_t deg)
 	uint16_t ocr = 0;
 	ocr = ceil(OCR_MIN + (conv * (OCR_MAX-OCR_MIN)));
 	return ocr;
+}
+static inline void set_YawServo(uint16_t ocr)
+{
+	OCR1A = ocr;
+}
+static inline void set_PitchServo(uint16_t ocr)
+{
+	OCR1B = ocr;
+}
+static inline void set_Servo(servo_t *cur, int16_t p_add, int16_t y_add)
+{
+	// pitch_add, yaw_add
+	float f_padd, f_yadd;
+	f_padd = (float)p_add * SERVO2GY25_RATIO;
+	f_yadd = (float)y_add * SERVO2GY25_RATIO;
+	cur->pitch_deg = (cur->pitch_deg * 9 + (cur->pitch_deg + (int16_t)f_padd)) / 10;
+	cur->yaw_deg = (cur->yaw_deg * 9 + (cur->yaw_deg + (int16_t)f_yadd)) / 10;
+	
+	//cur->pitch_deg += (int16_t)f_padd;
+	//cur->yaw_deg += (int16_t)f_yadd;
+	if(cur->pitch_deg <= SERVO_MIN)			cur->pitch_deg = SERVO_MIN;
+	else if(cur->pitch_deg >= SERVO_MAX)	cur->pitch_deg = SERVO_MAX;
+	if(cur->yaw_deg <= SERVO_MIN)			cur->yaw_deg = SERVO_MIN;
+	else if(cur->yaw_deg >= SERVO_MAX)		cur->yaw_deg = SERVO_MAX;
+	
+	set_PitchServo(DEG2OCR(cur->pitch_deg));
+	set_YawServo(DEG2OCR(cur->yaw_deg));
 }
 
 void Servo_sample_code(void)
@@ -149,19 +192,15 @@ void Servo_sample_code(void)
 			
 			break;
 		}
-		LCD_Clear();
-		LCD_Pos(0,0);
-		LCD_Str(SET_DISP);
-		LCD_Pos(0,10);
-		LCD_Str(lcd_deg_buffer);
-		LCD_Pos(1,0);
-		LCD_Str(SET_DISP2);
-		LCD_Pos(1,10);
-		LCD_Str(lcd_deg_buffer2);
+		LCD_print(0x80,SET_DISP);
+		LCD_print(0x0A,lcd_deg_buffer);
+		
+		LCD_print(0x10,SET_DISP2);
+		LCD_print(0x1A,lcd_deg_buffer2);
+		
 		delay_ms(100);	
 	}
 }
-
 
 
 #endif /* SERVO_H_ */

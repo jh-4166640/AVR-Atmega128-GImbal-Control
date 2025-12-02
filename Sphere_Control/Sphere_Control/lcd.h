@@ -42,6 +42,7 @@ static inline void LCD_Init(void);
 static inline void LCD_Display_Shift(uint8_t p);
 static inline void LCD_Cursor_Shift(uint8_t p);
 static inline void LCD_Cursor_Home(void);
+static inline void LCD_print(uint8_t flg, const uint8_t *str);
 
 static inline void LCD_Data(uint8_t ch)
 {
@@ -145,6 +146,23 @@ static inline void LCD_Cursor_Home(void)
 {
     LCD_Comm(0x02);
     LCD_Delay(2);
+}
+
+static inline void LCD_print(uint8_t flg, const uint8_t *str)
+{
+	// flg bit => 0b clr . . row col3 col2 col1 col0
+	// flg => 0bclr....... -> clr: clear 여부 clr=1 clear, clr=0 not
+	// flg => 0b...row.... -> row: row 지정 row=0 0행, row=1 1행
+	// flg => 0b....col~~  -> col3~col0 : colomn 지정
+	
+	uint8_t r=0, c=0;
+	
+	if(flg & 0x80) LCD_Clear();
+	r=(flg&0x10)>>4;
+	c=flg&0x0f;
+
+	LCD_Pos(r,c);
+	LCD_Str(str);
 }
 
 #endif // _INCLUDE_LCD_H__
