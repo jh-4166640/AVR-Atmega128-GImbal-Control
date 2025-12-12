@@ -122,8 +122,8 @@ void Servo_sample_code(void)
 	OCR1B = DEG2OCR(90);
 	uint16_t cur_deg = 90;
 	uint16_t cur_deg2 = 90;
-	uint8_t lcd_deg_buffer[4];
-	uint8_t lcd_deg_buffer2[4];
+	char lcd_deg_buffer[4];
+	char lcd_deg_buffer2[4];
 	uint8_t SET_DISP[] = "degree1 :";
 	uint8_t SET_DISP2[] = "degree2 :";
 	itoa(cur_deg, lcd_deg_buffer, 10);
@@ -193,10 +193,10 @@ void Servo_sample_code(void)
 			break;
 		}
 		LCD_print(0x80,SET_DISP);
-		LCD_print(0x0A,lcd_deg_buffer);
+		LCD_print(0x0A,(uint8_t)lcd_deg_buffer);
 		
 		LCD_print(0x10,SET_DISP2);
-		LCD_print(0x1A,lcd_deg_buffer2);
+		LCD_print(0x1A,(uint8_t)lcd_deg_buffer2);
 		
 		delay_ms(100);	
 	}

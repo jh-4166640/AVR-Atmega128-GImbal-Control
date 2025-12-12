@@ -16,7 +16,8 @@ main.d main.o: .././main.c .././main.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdlib.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stddef.h \
- .././lcd.h .././servo.h .././gy25.h .././uart.h
+ .././lcd.h .././servo.h .././MPU6050.h .././twi_gcc.h \
+ d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\delay.h
 
 .././main.h:
 
@@ -58,6 +59,8 @@ d:\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stddef.h:
 
 .././servo.h:
 
-.././gy25.h:
+.././MPU6050.h:
 
-.././uart.h:
+.././twi_gcc.h:
+
+d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\delay.h:

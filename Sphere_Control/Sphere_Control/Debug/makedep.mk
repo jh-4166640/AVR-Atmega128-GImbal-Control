@@ -2,9 +2,9 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
-gy25.c
-
 main.c
+
+MPU6050.c
 
 uart.c
 

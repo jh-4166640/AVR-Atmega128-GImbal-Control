@@ -14,7 +14,7 @@
 
 // Optional: set default timeout count for safe mode (can override in project)
 #ifndef ExtDev_ERR_MAX_CNT
-#define ExtDev_ERR_MAX_CNT 2000u
+#define ExtDev_ERR_MAX_CNT 10000u
 #endif
 
 // ---- Status Codes (Same as original) ----
@@ -37,8 +37,9 @@ static inline void Init_TWI(void)
 {
     // SCL ~100kHz @ F_CPU=14.7456MHz, prescaler=1
     TWSR = 0x00;
-    TWBR = 0x32;
-    TWCR = (1<<TWEN);		//TWI Enable
+    //TWBR = 0x32;
+    TWBR = 0x7f;
+	TWCR = (1<<TWEN);		//TWI Enable
 }
 
 static inline uint8_t TWI_TransCheck_ACK(uint8_t Stat)
@@ -88,19 +89,6 @@ static inline uint8_t TWI_Restart(void)
     return TWI_TransCheck_ACK(TWI_RESTART);
 }
 
-// Master transmit one byte
-static inline uint8_t TWI_Master_Transmit(uint8_t Data, uint8_t Addr)
-{
-    uint8_t ret = TWI_Start();
-    if (ret) return ret;
-    ret = TWI_Write_SLAW(Addr);
-    if (ret) return ret;
-    ret = TWI_Write_Data(Data);
-    if (ret) return ret;
-    TWI_Stop();
-    return 0;
-}
-
 // SLA+R
 static inline uint8_t TWI_Write_SLAR(uint8_t Addr)
 {
@@ -113,12 +101,13 @@ static inline uint8_t TWI_Write_SLAR(uint8_t Addr)
 static inline uint8_t TWI_Read_Data(uint8_t* Data)
 {
     uint8_t ret;
-    TWCR = (1<<TWINT) | (1<<TWEN);
+    TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
     ret = TWI_TransCheck_ACK(MR_DATA_ACK);
     if (ret) return ret;
     *Data = TWDR;
     return 0;
 }
+
 
 // DATA (read with NACK)
 static inline uint8_t TWI_Read_Data_NACK(uint8_t* Data)
@@ -131,69 +120,95 @@ static inline uint8_t TWI_Read_Data_NACK(uint8_t* Data)
     return 0;
 }
 
-// Master receive one byte
-static inline uint8_t TWI_Master_Receive(uint8_t Addr, uint8_t* Data)
+static inline uint8_t TWI_Write_SLAW_REG_DATA(uint8_t Addr, uint8_t Reg, uint8_t Data)
 {
-    uint8_t ret, rec;
-    ret = TWI_Start();             if (ret) return ret;
-    ret = TWI_Write_SLAR(Addr);    if (ret) return ret;
-    ret = TWI_Read_Data(&rec);     if (ret) return ret;
-    TWI_Stop();
-    *Data = rec;
-    return 0;
+	uint8_t ret;
+	ret=TWI_Start();				if(ret) return ret;
+	ret=TWI_Write_SLAW(Addr);		if(ret) return ret;
+	ret=TWI_Write_Data(Reg);		if(ret) return ret;
+	ret=TWI_Write_Data(Data);		if(ret) return ret;
+	TWI_Stop();
+	return 0;
 }
 
-// ---- Slave (Receiver) helpers ----
-static inline void Init_TWI_Slaveaddr(uint8_t Slave_Addr)
-{
-    TWAR = Slave_Addr;
-}
-
-static inline uint8_t TWI_Slave_Match_ACK(void)
-{
-    TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
-    return TWI_TransCheck_ACK(SR_SLA_ACK);
-}
-
-static inline uint8_t TWI_Slave_Stop_ACK(void)
-{
-    TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
-    return TWI_TransCheck_ACK(SR_STOP);
-}
-
-static inline uint8_t TWI_Slave_Read_Data(uint8_t* Data)
-{
-    uint8_t ret;
-    TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
-    ret = TWI_TransCheck_ACK(SR_DATA_ACK);
-    if (ret) return ret;
-    *Data = TWDR;
-    return 0;
-}
-
-static inline uint8_t TWI_Slave_Receive(uint8_t* Data)
-{
-    uint8_t ret, rec;
-    ret = TWI_Slave_Match_ACK();   if (ret) return ret;
-    ret = TWI_Slave_Read_Data(&rec); if (ret) return ret;
-    ret = TWI_Slave_Stop_ACK();    if (ret) return ret;
-    *Data = rec;					// 수신 데이터 반환
-    return 0;
-}
-
-// Mixed (e.g., EEPROM register read)
 static inline uint8_t TWI_Master_Receive_ExDevice(uint8_t devAddr, uint8_t regAddr, uint8_t* Data)
 {
-    uint8_t ret, rec;
-    ret = TWI_Start();                 if (ret) return ret;
-    ret = TWI_Write_SLAW(devAddr);     if (ret) return ret;
-    ret = TWI_Write_Data(regAddr);     if (ret) return ret;
-    ret = TWI_Restart();               if (ret) return ret;
-    ret = TWI_Write_SLAR(devAddr);     if (ret) return ret;
-    ret = TWI_Read_Data_NACK(&rec);    if (ret) return ret;
-    TWI_Stop();
-    *Data = rec;
-    return 0;
+	uint8_t ret, rec;
+	ret = TWI_Start();                 if (ret) return ret;
+	ret = TWI_Write_SLAW(devAddr);     if (ret) return ret;
+	ret = TWI_Write_Data(regAddr);     if (ret) return ret;
+	ret = TWI_Restart();               if (ret) return ret;
+	ret = TWI_Write_SLAR(devAddr);     if (ret) return ret;
+	ret = TWI_Read_Data_NACK(&rec);    if (ret) return ret;
+	TWI_Stop();
+	*Data = rec;
+	return 0;
 }
+//// Master transmit one byte
+//static inline uint8_t TWI_Master_Transmit(uint8_t Data, uint8_t Addr)
+//{
+	//uint8_t ret = TWI_Start();
+	//if (ret) return ret;
+	//ret = TWI_Write_SLAW(Addr);
+	//if (ret) return ret;
+	//ret = TWI_Write_Data(Data);
+	//if (ret) return ret;
+	//TWI_Stop();
+	//return 0;
+//}
+//
+//
+//// Master receive one byte
+//static inline uint8_t TWI_Master_Receive(uint8_t Addr, uint8_t* Data)
+//{
+    //uint8_t ret, rec;
+    //ret = TWI_Start();             if (ret) return ret;
+    //ret = TWI_Write_SLAR(Addr);    if (ret) return ret;
+    //ret = TWI_Read_Data(&rec);     if (ret) return ret;
+    //TWI_Stop();
+    //*Data = rec;
+    //return 0;
+//}
+//
+//// ---- Slave (Receiver) helpers ----
+//static inline void Init_TWI_Slaveaddr(uint8_t Slave_Addr)
+//{
+    //TWAR = Slave_Addr;
+//}
+//
+//static inline uint8_t TWI_Slave_Match_ACK(void)
+//{
+    //TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
+    //return TWI_TransCheck_ACK(SR_SLA_ACK);
+//}
+//
+//static inline uint8_t TWI_Slave_Stop_ACK(void)
+//{
+    //TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
+    //return TWI_TransCheck_ACK(SR_STOP);
+//}
+//
+//static inline uint8_t TWI_Slave_Read_Data(uint8_t* Data)
+//{
+    //uint8_t ret;
+    //TWCR = (1<<TWINT) | (1<<TWEA) | (1<<TWEN);
+    //ret = TWI_TransCheck_ACK(SR_DATA_ACK);
+    //if (ret) return ret;
+    //*Data = TWDR;
+    //return 0;
+//}
+//
+//static inline uint8_t TWI_Slave_Receive(uint8_t* Data)
+//{
+    //uint8_t ret, rec;
+    //ret = TWI_Slave_Match_ACK();   if (ret) return ret;
+    //ret = TWI_Slave_Read_Data(&rec); if (ret) return ret;
+    //ret = TWI_Slave_Stop_ACK();    if (ret) return ret;
+    //*Data = rec;					// 수신 데이터 반환
+    //return 0;
+//}
+//
+//// Mixed (e.g., EEPROM register read)
+
 
 #endif // _INCLUDE_TWI_H__

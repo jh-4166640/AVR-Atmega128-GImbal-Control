@@ -122,12 +122,6 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="gy25.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="gy25.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="lcd.h">
       <SubType>compile</SubType>
     </Compile>
@@ -135,6 +129,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MPU6050.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MPU6050.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="servo.h">

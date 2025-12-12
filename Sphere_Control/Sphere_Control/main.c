@@ -9,42 +9,84 @@
 
 int main(void)
 {
+	cli();
+	char msg[20];
 	LCD_Init();
-	GY25_Init();
-	Servo_Init();
+	MPU6050_Init();
+	uint8_t res = MPU6050_Check_WHO_AM_I();
+	if(res == 0)
+	{
+		LCD_print(0x80, "Pass");
+		delay_ms(1000);
+	}
+	else
+	{
+		sprintf(msg, "Fail %d",res);
+		LCD_print(0x80,msg);	
+		delay_ms(1000);
+	}
+	
 	sei();
-	DDRD = 0x00;
-	//Servo_sample_code();
 	
 	uint8_t str[32];
 	LCD_Clear();
-	cur_angle = read_GY25();
-	servo_status.pitch_deg = 90;
-	servo_status.yaw_deg = 90;
-	set_PitchServo(DEG2OCR(servo_status.pitch_deg));
-	set_YawServo(DEG2OCR(servo_status.yaw_deg));
-	delay_ms(1000);
-    while (1) 
-    {
-		raw_angle = read_GY25();
-		// LPF
-		// new_angle = alpha * cur_angle + angle * (1-alpha);
-		new_angle.pitch = (LPF_alpha * cur_angle.pitch + raw_angle.pitch * (LPF_scale-LPF_alpha)) / LPF_scale;
-		new_angle.yaw   = (LPF_alpha * cur_angle.yaw   + raw_angle.yaw   * (LPF_scale-LPF_alpha)) / LPF_scale;
-		new_angle.roll  = (LPF_alpha * cur_angle.roll  + raw_angle.roll  * (LPF_scale-LPF_alpha)) / LPF_scale;
-		// 변화량으로 제어
-		//gy25_t delta = Delta_angle_Calc_GY25(&new_angle, &cur_angle);
-		//set_Servo(&servo_status, delta.pitch, delta.yaw);
-		// 값으로 제어
-		set_PitchServo(DEG2OCR(new_angle.pitch + 90));
-		set_YawServo(DEG2OCR(new_angle.yaw + 90));
+	while (1)
+	{
+		if(data_ready_flg)
+		{
+			data_ready_flg = 0;
+			cli();
+			sprintf(str,"r:%d p:%d",(uint16_t)roll_deg,(uint16_t)pitch_deg);
+			LCD_print(0x80,str);
+			sprintf(str,"y:%d",(uint16_t)yaw_deg);
+			LCD_print(0x10,str);	
+			_delay_ms(100);
+			sei();
+		}
 		
-		sprintf(str,"Y:%3d   P:%3d",cur_angle.yaw,cur_angle.pitch);
-		LCD_print(0x80,str);
-		//sprintf(str,"YSM:%3d PSM:%3d",servo_status.yaw_deg, servo_status.pitch_deg);
-		//sprintf(str,"Y:%3d   P:%3d",delta.yaw,delta.pitch);
-		LCD_print(0x10,str);
-		delay_ms(300);
-    }
+		//delay_ms(300);
+	}
 }
+//
+////GY-25
+//int main(void)
+//{
+	//LCD_Init();
+	//GY25_Init();
+	//Servo_Init();
+	//sei();
+	//DDRD = 0x00;
+	////Servo_sample_code();
+	//
+	//uint8_t str[32];
+	//LCD_Clear();
+	//cur_angle = read_GY25();
+	//servo_status.pitch_deg = 90;
+	//servo_status.yaw_deg = 90;
+	//set_PitchServo(DEG2OCR(servo_status.pitch_deg));
+	//set_YawServo(DEG2OCR(servo_status.yaw_deg));
+	//delay_ms(1000);
+    //while (1) 
+    //{
+		//raw_angle = read_GY25();
+		//// LPF
+		//// new_angle = alpha * cur_angle + angle * (1-alpha);
+		//new_angle.pitch = (LPF_alpha * cur_angle.pitch + raw_angle.pitch * (LPF_scale-LPF_alpha)) / LPF_scale;
+		//new_angle.yaw   = (LPF_alpha * cur_angle.yaw   + raw_angle.yaw   * (LPF_scale-LPF_alpha)) / LPF_scale;
+		//new_angle.roll  = (LPF_alpha * cur_angle.roll  + raw_angle.roll  * (LPF_scale-LPF_alpha)) / LPF_scale;
+		//// 변화량으로 제어
+		////gy25_t delta = Delta_angle_Calc_GY25(&new_angle, &cur_angle);
+		////set_Servo(&servo_status, delta.pitch, delta.yaw);
+		//// 값으로 제어
+		//set_PitchServo(DEG2OCR(new_angle.pitch + 90));
+		//set_YawServo(DEG2OCR(new_angle.yaw + 90));
+		//
+		//sprintf(str,"Y:%3d   P:%3d",cur_angle.yaw,cur_angle.pitch);
+		//LCD_print(0x80,str);
+		////sprintf(str,"YSM:%3d PSM:%3d",servo_status.yaw_deg, servo_status.pitch_deg);
+		////sprintf(str,"Y:%3d   P:%3d",delta.yaw,delta.pitch);
+		//LCD_print(0x10,str);
+		//delay_ms(300);
+    //}
+//}
 

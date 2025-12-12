@@ -1,4 +1,6 @@
-gy25.d gy25.o: .././gy25.c .././gy25.h \
+MPU6050.d MPU6050.o: .././MPU6050.c .././MPU6050.h \
+ d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
+ .././twi_gcc.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\sfr_defs.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\inttypes.h \
@@ -10,15 +12,16 @@ gy25.d gy25.o: .././gy25.c .././gy25.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\version.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\fuse.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\lock.h \
+ .././lcd.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\util\delay.h \
  d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\util\delay_basic.h \
- d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
- d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h \
- d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdlib.h \
- d:\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stddef.h \
- .././uart.h .././lcd.h
+ d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\delay.h
 
-.././gy25.h:
+.././MPU6050.h:
+
+d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h:
+
+.././twi_gcc.h:
 
 d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
 
@@ -42,18 +45,10 @@ d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\fuse.h:
 
 d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\lock.h:
 
+.././lcd.h:
+
 d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\util\delay.h:
 
 d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\util\delay_basic.h:
 
-d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h:
-
-d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h:
-
-d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdlib.h:
-
-d:\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stddef.h:
-
-.././uart.h:
-
-.././lcd.h:
+d:\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\delay.h:
