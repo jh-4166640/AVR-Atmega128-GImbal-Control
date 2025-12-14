@@ -30,6 +30,7 @@ volatile uint8_t data_ready_flg = 0;
 inline void delay_ms(uint16_t ms);
 
 float roll_deg, pitch_deg, yaw_deg;
+float pitch_deg_stabilize, yaw_deg_stabilize;;
 
 ISR(TIMER1_COMPA_vect)
 {

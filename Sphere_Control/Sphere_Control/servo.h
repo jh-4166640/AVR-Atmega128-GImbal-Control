@@ -25,9 +25,12 @@
 /* Servo motor : GY25 = 2:3 */
 // 60 : 90
 #define SERVO2GY25_RATIO	(2.0f/3.0f)
-#define SERVO_MAX 150
-#define SERVO_MIN 30
-#define SERVO_RANGE		(SERVO_MAX-SERVO_MIN)
+#define SERVO_MAX_YAW		150
+#define SERVO_MIN_YAW		30
+#define SERVO_RANGE_YAW		(SERVO_MAX_YAW-SERVO_MIN_YAW)
+#define SERVO_MAX_PITCH		170
+#define SERVO_MIN_PITCH		90
+
 
 #define YAW_MIN			-10.0f
 #define YAW_MAX			10.0f
@@ -46,8 +49,10 @@ void Timer1_16bit_FastPWM_Init(void);
 static inline uint16_t DEG2OCR(uint16_t deg);
 static inline void set_YawServo(uint16_t ocr);
 static inline void set_PitchServo(uint16_t ocr);
-static inline void set_Servo_Relative(servo_t *cur, int16_t p_add, int16_t y_add);
-static inline void set_Servo_Absolute(servo_t *cur, int16_t p_deg, int16_t y_deg);
+static inline void set_Servo_angle(servo_t *cur, float pdeg, float stabz_p, float ydeg, float stabz_y);
+static inline int16_t set_ServoPitch_Relative(const uint16_t cur, float p_deg, float stabilize_val);
+static inline int16_t set_ServoYaw_Relative(const uint16_t cur, float y_deg, float stabilize_val);
+
 
 
 //void Servo_sample_code(void);
@@ -104,50 +109,71 @@ static inline void set_PitchServo(uint16_t ocr)
 {
 	OCR1B = ocr;
 }
-static inline void set_Servo_Relative(servo_t *cur, int16_t p_add, int16_t y_add)
+static inline void set_Servo_angle(servo_t *cur, float pdeg, float stabz_p, float ydeg, float stabz_y)
 {
-	// pitch_add, yaw_add
-	float f_padd, f_yadd;
-	f_padd = (float)p_add * SERVO2GY25_RATIO;
-	f_yadd = (float)y_add * SERVO2GY25_RATIO;
-	cur->pitch = (cur->pitch * 9 + (cur->pitch + (int16_t)f_padd)) / 10;
-	cur->yaw = (cur->yaw * 9 + (cur->yaw + (int16_t)f_yadd)) / 10;
+	const int16_t SERVO_SMOOTH_STEP = 2;
+	int16_t target_p, target_y;
+	int16_t cur_p = cur->pitch;
+	int16_t cur_y = cur->yaw;
+	target_p = set_ServoPitch_Relative(cur_p, pdeg, stabz_p);
+	target_y = set_ServoYaw_Relative(cur_y, ydeg, stabz_y);
 	
-	//cur->pitch_deg += (int16_t)f_padd;
-	//cur->yaw_deg += (int16_t)f_yadd;
-	if(cur->pitch <= SERVO_MIN)			cur->pitch = SERVO_MIN;
-	else if(cur->pitch >= SERVO_MAX)	cur->pitch = SERVO_MAX;
-	if(cur->yaw <= SERVO_MIN)			cur->yaw = SERVO_MIN;
-	else if(cur->yaw >= SERVO_MAX)		cur->yaw = SERVO_MAX;
 	
-	set_PitchServo(DEG2OCR(cur->pitch));	
-	set_YawServo(DEG2OCR(cur->yaw));
+	while(target_p != cur->pitch || target_y != cur->yaw)
+	{
+		if(cur->pitch < target_p) {
+			cur_p += SERVO_SMOOTH_STEP;
+			if(cur_p > target_p) cur_p = target_p;
+		}
+		else if (cur_p > target_p) {
+			cur_p -= SERVO_SMOOTH_STEP;
+			if (cur_p < target_p) cur_p = target_p;
+		}
+		
+		if (cur_y < target_y) {
+			cur_y += SERVO_SMOOTH_STEP;
+			if (cur_y > target_y) cur_y = target_y;
+			} else if (cur_y > target_y) {
+			cur_y -= SERVO_SMOOTH_STEP;
+			if (cur_y < target_y) cur_y = target_y;
+		}
+		
+		set_PitchServo(DEG2OCR(cur_p));
+		set_YawServo(DEG2OCR(cur_y));
+		
+		cur->pitch = cur_p;
+		cur->yaw = cur_y;
+		delay_ms(1);
+	}
+	delay_ms(2);
+}
+static inline int16_t set_ServoPitch_Relative(const uint16_t cur, float p_deg, float stabilize_val)
+{
+	const float pass_val = 2.0f;
+	float delta = p_deg - stabilize_val;
+	if(fabs(delta) < pass_val) return cur;
+	
+	int16_t target_angle = cur + ((int16_t)roundf(delta * 8.0f));
+	if(target_angle <= SERVO_MIN_PITCH) target_angle = SERVO_MIN_PITCH;
+	else if(target_angle >= SERVO_MAX_PITCH) target_angle = SERVO_MAX_PITCH;
+	
+	return target_angle;
 }
 
-static inline void set_Servo_Absolute(servo_t *cur, int16_t p_deg, int16_t y_deg)
+static inline int16_t set_ServoYaw_Relative(const uint16_t cur, float y_deg, float stabilize_val)
 {
-	/*
-	#define YAW_MIN			-10
-	#define YAW_MAX			10
-	#define	DELTA_YAW		YAW_MAX-YAW_MIN
-	#define ResolutionStep	45
-	*/
-	float yaw_index_f;
-	int16_t yaw_index;
-	float yaw_mappeed_angle;
+	const float pass_val = 0.5f;
+	float delta = y_deg - stabilize_val;
+	if(fabs(delta) < pass_val) return cur;
 	
-	uint8_t msg[16];
+	int16_t target_angle = cur + ((int16_t)roundf(delta * 6.0f));
+	if(target_angle > SERVO_MAX_YAW) target_angle = SERVO_MAX_YAW;
+	else if(target_angle < SERVO_MIN_YAW) target_angle = SERVO_MIN_YAW;
 	
-	if(y_deg > YAW_MAX) y_deg =YAW_MAX;
-	else if(y_deg < YAW_MIN) y_deg = YAW_MIN;	
-	yaw_index_f = (((float)y_deg - YAW_MIN) / DELTA_YAW) * (float)(ResolutionStep-1.0f);	
-	yaw_index = (int16_t)roundf(yaw_index_f);
-	yaw_mappeed_angle = SERVO_MIN + (float)yaw_index * (SERVO_RANGE/(float)(ResolutionStep - 1));
-
-	cur->yaw = (uint16_t)yaw_mappeed_angle;
-	set_YawServo(DEG2OCR(cur->yaw));
-	
-	
+	return target_angle;
 }
+
+
 #endif /* SERVO_H_ */
+
 

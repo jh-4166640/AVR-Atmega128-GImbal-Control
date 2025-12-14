@@ -12,6 +12,7 @@
 	pitch는 위로 올라가면 -
 	yaw는 왼쪽이 +	
 */
+#define StabilizeCNT 8
 
 
 void Init_main(void)
@@ -48,22 +49,35 @@ int main(void)
 
 	uint8_t str[32];
 	LCD_Clear();
-	
-	
+	pitch_deg_stabilize = 0;
+	yaw_deg_stabilize = 0;
+	uint16_t scan_MPUcnt = 0;
 	while (1)
 	{
 		if(data_ready_flg)
 		{
 			data_ready_flg = 0;
+			if(scan_MPUcnt == StabilizeCNT)
+			{
+				pitch_deg_stabilize = pitch_deg;
+				yaw_deg_stabilize = yaw_deg;
+				scan_MPUcnt=0;
+			}
 			cli();
-			sprintf(str,"r:%d p:%d y:%d",(uint16_t)roll_deg,(uint16_t)pitch_deg,(uint16_t)yaw_deg);
+			//sprintf(str,"r:%d p:%d y:%d",(uint16_t)roll_deg,(uint16_t)pitch_deg,(uint16_t)yaw_deg);
+			sprintf(str,"P:%d p:%d y:%d",(int16_t)pitch_deg_stabilize,(int16_t)pitch_deg,(int16_t)yaw_deg);
 			LCD_print(0x80,str);
-			//set_Servo_Relative(&servo_status, pitch_deg*Q2deg,yaw_deg*Q2deg);
-			set_Servo_Absolute(&servo_status,(uint16_t)pitch_deg, (uint16_t)yaw_deg);
-			sprintf(str,"motor p:%d y:%d", servo_status.pitch, servo_status.yaw);
+			
+			//set_ServoPitch_Relative(&servo_status, pitch_deg, &old_pitch_deg_stabilize);
+			//set_ServoYaw_Relative(&servo_status, yaw_deg, &old_yaw_deg_stabilize);
+			////set_ServoYaw_Absolute(&servo_status, (uint16_t)yaw_deg);
+			set_Servo_angle(&servo_status,pitch_deg,pitch_deg_stabilize,yaw_deg,yaw_deg_stabilize);
+			
+			sprintf(str,"Y:%d p:%d y:%d",(int16_t)yaw_deg_stabilize, servo_status.pitch, servo_status.yaw);
 			LCD_print(0x10,str);	
 			_delay_ms(100);
 			sei();
+			scan_MPUcnt++;
 		}
 		
 		//delay_ms(300);
