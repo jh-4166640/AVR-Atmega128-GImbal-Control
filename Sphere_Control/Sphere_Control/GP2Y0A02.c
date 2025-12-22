@@ -16,7 +16,7 @@
 
 void ADC_Init(void)
 {
-	//ADC0 사용, Big Endian
+	//ADC1 사용, Big Endian
 	ADMUX = (1<<REFS0) | (1<<MUX0); // AVCC랑 AREF 되어 있는것 같음
 	//128 분주 => 115200
 	ADCSRA = (1<<ADEN) | (1<<ADFR) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
